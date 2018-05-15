@@ -47,3 +47,39 @@ mytree <- rpart(Fraud ~ RearEnd, data = train2, method = "class",
                 weights = c(.4, .2, .2))
 
 #EXEMPLO: TITANIC
+titanic <- read.csv("titanic.csv",
+  stringsAsFactors=FALSE)
+
+table(data$survived)
+summary(data$sex)
+titanic$sex <- as.factor(titanic$sex)
+summary(titanic$sex)
+
+set.seed(123)
+
+train.index <- sample((nrow(titanic)),0.7*nrow(titanic))
+
+train <-  titanic[train.index,]
+test <-  titanic[-train.index,]
+
+fit <- rpart(Survived ~ Pclass + Sex + Age + SibSp +
+               Parch + Fare + Embarked,
+             data=train,
+             method="class")
+summary(fit)
+
+prediction <-  predict(fit, test, type = "class")
+table (prediction,test$survived)
+prop.table(table(prediction,test$survived))
+
+titanic <- read.csv(("https://raw.githubusercontent.com/Efsilvaa/EPSMLRepo/master/Data/titanic.csv"),
+                    stringsAsFactors=FALSE)
+fit <- rpart(Survived ~ Pclass + Sex + Age + SibSp +
+               Parch + Fare + Embarked,
+             data=train, method="class",
+             minsplit = 2, cp = 0 
+)
+
+prediction <- predict(fit, test, type = "class")
+table(prediction,test$Survived)
+prop.table(table(prediction,test$Survived))
