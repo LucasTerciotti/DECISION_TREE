@@ -1,0 +1,139 @@
+---
+title: "Birth Weight"
+author: "Lucas Terciotti"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+```{r message=FALSE, warning=FALSE}
+library(rpart)
+library(rpart.plot)
+library(RColorBrewer)
+library(rattle)
+```
+
+
+##Preparacao:
+```{r}
+bw <- read.csv(("https://raw.githubusercontent.com/Efsilvaa/EPSMLRepo/master/Data/birthwt.csv"),
+                    stringsAsFactors=FALSE,
+                    na.strings = c(""))
+cols <- c('low', 'race', 'smoke', 'ht', 'ui')
+bw[cols] <- lapply(bw[cols], as.factor)
+str(bw)
+```
+
+###Separação do conjunto de dados em Teste e Treinamento:
+Foram reservados 70% para treinamento e 30% para teste.
+
+```{r}
+
+set.seed(123)
+
+train.index <- sample((nrow(bw)),0.7*nrow(bw))
+
+train <- bw[train.index,]
+test  <- bw[-train.index,]
+```
+
+##Arvore:
+Primeiramente faremos o treinamento somente com "Age" para ver a evolução:
+
+```{r}
+fit <- rpart(low ~ age,
+             data=train,
+             method="class")
+
+summary(fit)
+
+prediction <- predict(fit, test, type = "class")
+table(prediction,test$low)
+prop.table(table(prediction,test$low))
+```
+Temos uma acurácia de 57.89% considerando apenas "Age".
+
+###Incrementando a arvore:
+```{r}
+fit <- rpart(low ~ age + lwt + race + smoke + ptl + ht + ui + ftv,
+             data=train,
+             minsplit = 2, cp = -1,
+             method="class")
+
+summary(fit)
+
+prediction <- predict(fit, test, type = "class")
+table(prediction,test$low)
+prop.table(table(prediction,test$low))
+```
+
+Desconsiderando apenas "bwt", já que "low"=("bwt"<=2.5), e considerando todos os outros fatores aumentamos a acurácia das previsões para 63.1579%.
+
+###Plot:
+```{r}
+fancyRpartPlot(fit)
+```
+
+Ao analisar o summary de "fit", podemos perceber que a importancia de ht e ui é baixa, portanto podemos testar uma arvore mais simples sem esses fatores:
+
+```{r}
+fit2 <- rpart(low ~ age + lwt + race + smoke + ptl + ftv,
+             data=train,
+             minsplit = 2,
+             cp = -1,
+             method="class")
+
+summary(fit2)
+
+prediction <- predict(fit2, test, type = "class")
+table(prediction,test$low)
+prop.table(table(prediction,test$low))
+```
+A acurácia da previsão caiu consideravelmente (50.87719%). Manteremos ht e ui. A seguir alteraremos os valores de minsplit para descobrir como ele altera a previsão:
+
+```{r}
+fit <- rpart(low ~ age + lwt + race + smoke + ptl + ht + ui + ftv,
+             data=train,
+             minsplit = 10, cp = -1,
+             method="class")
+
+prediction <- predict(fit, test, type = "class")
+table(prediction,test$low)
+prop.table(table(prediction,test$low))
+fancyRpartPlot(fit)
+```
+
+Ao fazer o plot, verificamos que ao aumentar minsplit, o numero minimo de observacoes em cada no aumenta e a arvore diminui.
+
+O fator "lwt" é o mais importante para a analise, como ficaria uma arvore somente com ele?
+```{r}
+fit <- rpart(low ~ lwt,
+             data=train,
+             minsplit = 2, cp = -1,
+             method="class")
+
+prediction <- predict(fit, test, type = "class")
+table(prediction,test$low)
+prop.table(table(prediction,test$low))
+
+fancyRpartPlot(fit)
+```
+
+O valor previsto de recém nascidos sem ser de baixo peso aumenta, mas a acurácia geral do modelo abaixa.
+
+##Melhor modelo:
+```{r}
+fit <- rpart(low ~ age + lwt + race + smoke + ptl + ht + ui + ftv,
+             data=train,
+             minsplit = 2, cp = -1,
+             method="class")
+
+prediction <- predict(fit, test, type = "class")
+table(prediction,test$low)
+prop.table(table(prediction,test$low))
+
+fancyRpartPlot(fit)
+```
+
