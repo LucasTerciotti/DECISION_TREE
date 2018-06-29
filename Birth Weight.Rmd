@@ -16,7 +16,7 @@ library(rattle)
 ```
 
 
-##Preparacao:
+##Preparação:
 ```{r}
 bw <- read.csv(("https://raw.githubusercontent.com/Efsilvaa/EPSMLRepo/master/Data/birthwt.csv"),
                     stringsAsFactors=FALSE,
@@ -39,8 +39,8 @@ train <- bw[train.index,]
 test  <- bw[-train.index,]
 ```
 
-##Arvore:
-Primeiramente faremos o treinamento somente com "Age" para ver a evolução:
+##Árvore:
+Primeiramente, faremos o treinamento somente com "Age" para verificar a evolução da árvore:
 
 ```{r}
 fit <- rpart(low ~ age,
@@ -53,9 +53,10 @@ prediction <- predict(fit, test, type = "class")
 table(prediction,test$low)
 prop.table(table(prediction,test$low))
 ```
+
 Temos uma acurácia de 57.89% considerando apenas "Age".
 
-###Incrementando a arvore:
+###Incrementando a árvore:
 ```{r}
 fit <- rpart(low ~ age + lwt + race + smoke + ptl + ht + ui + ftv,
              data=train,
@@ -76,7 +77,7 @@ Desconsiderando apenas "bwt", já que "low"=("bwt"<=2.5), e considerando todos o
 fancyRpartPlot(fit)
 ```
 
-Ao analisar o summary de "fit", podemos perceber que a importancia de ht e ui é baixa, portanto podemos testar uma arvore mais simples sem esses fatores:
+Ao analisar o summary de "fit", podemos perceber que a importancia de "ht" e "ui" é baixa, portanto podemos testar uma árvore mais simples sem esses fatores:
 
 ```{r}
 fit2 <- rpart(low ~ age + lwt + race + smoke + ptl + ftv,
@@ -91,7 +92,8 @@ prediction <- predict(fit2, test, type = "class")
 table(prediction,test$low)
 prop.table(table(prediction,test$low))
 ```
-A acurácia da previsão caiu consideravelmente (50.87719%). Manteremos ht e ui. A seguir alteraremos os valores de minsplit para descobrir como ele altera a previsão:
+
+A acurácia da previsão caiu consideravelmente (50.87719%). Manteremos "ht" e "ui". A seguir alteraremos os valores de "minsplit" para descobrir como ele altera a previsão:
 
 ```{r}
 fit <- rpart(low ~ age + lwt + race + smoke + ptl + ht + ui + ftv,
@@ -105,9 +107,9 @@ prop.table(table(prediction,test$low))
 fancyRpartPlot(fit)
 ```
 
-Ao fazer o plot, verificamos que ao aumentar minsplit, o numero minimo de observacoes em cada no aumenta e a arvore diminui.
+Ao fazer o plot, verificamos que ao aumentar "minsplit", o numero mínimo de observações em cada nó aumenta e a arvore diminui.
 
-O fator "lwt" é o mais importante para a analise, como ficaria uma arvore somente com ele?
+O fator "lwt" é o mais importante para a análise, então como ficaria uma arvore somente com ele?
 ```{r}
 fit <- rpart(low ~ lwt,
              data=train,
